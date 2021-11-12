@@ -204,7 +204,7 @@ def train(args, model, train_loader, valid_loader, optimizer, forward_fn, metric
 
         # evaluate
         if ((epoch+1) % evaluate_every) == 0:
-            val_loss, val_metrics = evaluate(model, valid_loader, forward_fn, metrics_fn, i2w, is_test=False)
+            val_loss, val_metrics = evaluate(args, model, valid_loader, forward_fn, metrics_fn, i2w, is_test=False)
 
             # Early stopping
             val_metric = val_metrics[valid_criterion]
