@@ -63,7 +63,7 @@ def forward_sequence_classification(model, batch_data, i2w, is_test=False, devic
 
 class DocumentMultiClassDataset(Dataset):
 
-    def __init__(self, dataset_df, tokenizer, w2i, no_special_token=False, *args, **kwargs):
+    def __init__(self, dataset_df, tokenizer, no_special_token=False, *args, **kwargs):
         self.data = dataset_df
         self.tokenizer = tokenizer
         self.no_special_token = no_special_token
