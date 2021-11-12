@@ -127,7 +127,7 @@ def metrics_to_string(metric_dict):
 ###
 
 # Evaluate function for validation and test
-def evaluate(model, data_loader, forward_fn, metrics_fn, i2w, is_test=False):
+def evaluate(args, model, data_loader, forward_fn, metrics_fn, i2w, is_test=False):
     model.eval()
     total_loss, total_correct, total_labels = 0, 0, 0
 
@@ -160,7 +160,7 @@ def evaluate(model, data_loader, forward_fn, metrics_fn, i2w, is_test=False):
         return total_loss, metrics
 
 # Training function and trainer
-def train(model, train_loader, valid_loader, optimizer, forward_fn, metrics_fn, valid_criterion, i2w, n_epochs, evaluate_every=1, early_stop=3, step_size=1, gamma=0.5, model_dir="", exp_id=None):
+def train(args, model, train_loader, valid_loader, optimizer, forward_fn, metrics_fn, valid_criterion, i2w, n_epochs, evaluate_every=1, early_stop=3, step_size=1, gamma=0.5, model_dir="", exp_id=None):
     scheduler = StepLR(optimizer, step_size=step_size, gamma=gamma)
 
     best_val_metric = -100
