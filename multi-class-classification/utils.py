@@ -63,14 +63,15 @@ def forward_sequence_classification(model, batch_data, i2w, is_test=False, devic
 
 class DocumentMultiClassDataset(Dataset):
     
-    def load_dataset(self, dataset_df, w2i):
+    def load_dataset(self, dataset_df):
         df = dataset_df.copy()
         df.columns = ['text','label']
-        df['label'] = df['label'].apply(lambda lab: w2i[lab])
+        df['label'] = df['label'].apply(lambda lab: self.w2i[lab])
         return df
 
     def __init__(self, dataset_df, tokenizer, w2i, no_special_token=False, *args, **kwargs):
-        self.data = self.load_dataset(dataset_df, w2i)
+        self.data = self.load_dataset(dataset_df)
+        self.w2i = w2i
         self.tokenizer = tokenizer
         self.no_special_token = no_special_token
 
