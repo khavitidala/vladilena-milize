@@ -18,7 +18,7 @@ from nltk.tokenize import TweetTokenizer
 from torch.utils.data import Dataset, DataLoader 
 from sklearn.metrics import accuracy_score, f1_score, recall_score, precision_score
 
-def document_sentiment_metrics_fn(list_hyp, list_label):
+def document_multiclass_metrics_fn(list_hyp, list_label):
     metrics = {}
     metrics["ACC"] = accuracy_score(list_label, list_hyp)
     metrics["F1"] = f1_score(list_label, list_hyp, average='macro')
@@ -61,35 +61,31 @@ def forward_sequence_classification(model, batch_data, i2w, is_test=False, devic
 
     return loss, list_hyp, list_label
 
-class DocumentSentimentDataset(Dataset):
-    # Static constant variable
-    LABEL2INDEX = i2w #{'positive': 0, 'neutral': 1, 'negative': 2}
-    INDEX2LABEL = w2i #{0: 'positive', 1: 'neutral', 2: 'negative'}
-    NUM_LABELS = args["num_labels"] #3
-
-    def load_dataset(self, path):
-        df = pd.read_csv(path, sep='\t', header=None)
-        df.columns = ['text','sentiment']
-        df['sentiment'] = df['sentiment'].apply(lambda lab: w2i[lab])
+class DocumentMultiClassDataset(Dataset):
+    
+    def load_dataset(self, dataset_df):
+        df = dataset_df.copy()
+        df.columns = ['text','label']
+        df['label'] = df['label'].apply(lambda lab: w2i[lab])
         return df
 
-    def __init__(self, dataset_path, tokenizer, no_special_token=False, *args, **kwargs):
-        self.data = self.load_dataset(dataset_path)
+    def __init__(self, dataset_df, tokenizer, no_special_token=False, *args, **kwargs):
+        self.data = self.load_dataset(dataset_df)
         self.tokenizer = tokenizer
         self.no_special_token = no_special_token
 
     def __getitem__(self, index):
         data = self.data.loc[index,:]
-        text, sentiment = data['text'], data['sentiment']
+        text, label = data['text'], data['label']
         subwords = self.tokenizer.encode(text, add_special_tokens=not self.no_special_token)
-        return np.array(subwords), np.array(sentiment), data['text']
+        return np.array(subwords), np.array(label), data['text']
 
     def __len__(self):
         return len(self.data)
 
-class DocumentSentimentDataLoader(DataLoader):
+class DocumentMultiClassDataLoader(DataLoader):
     def __init__(self, max_seq_len=512, *args, **kwargs):
-        super(DocumentSentimentDataLoader, self).__init__(*args, **kwargs)
+        super(DocumentMultiClassDataLoader, self).__init__(*args, **kwargs)
         self.collate_fn = self._collate_fn
         self.max_seq_len = max_seq_len
 
@@ -100,18 +96,18 @@ class DocumentSentimentDataLoader(DataLoader):
 
         subword_batch = np.zeros((batch_size, max_seq_len), dtype=np.int64)
         mask_batch = np.zeros((batch_size, max_seq_len), dtype=np.float32)
-        sentiment_batch = np.zeros((batch_size, 1), dtype=np.int64)
+        label_batch = np.zeros((batch_size, 1), dtype=np.int64)
 
         seq_list = []
-        for i, (subwords, sentiment, raw_seq) in enumerate(batch):
+        for i, (subwords, label, raw_seq) in enumerate(batch):
             subwords = subwords[:max_seq_len]
             subword_batch[i,:len(subwords)] = subwords
             mask_batch[i,:len(subwords)] = 1
-            sentiment_batch[i,0] = sentiment
+            label_batch[i,0] = label
 
             seq_list.append(raw_seq)
 
-        return subword_batch, mask_batch, sentiment_batch, seq_list
+        return subword_batch, mask_batch, label_batch, seq_list
 
 def set_seed(seed):
     random.seed(seed)
